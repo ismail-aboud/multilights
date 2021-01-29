@@ -1,0 +1,163 @@
+;**********************************************************************
+;   This file is a basic code template for assembly code generation   *
+;   on the PIC16F84. This file contains the basic code                *
+;   building blocks to build upon.                                    *  
+;                                                                     *
+;   Refer to the MPASM User's Guide for additional information on     *
+;   features of the assembler (Document DS33014).                     *
+;                                                                     *
+;   Refer to the respective PIC data sheet for additional             *
+;   information on the instruction set.                               *
+;                                                                     *
+;**********************************************************************
+;                                                                     *
+;    Filename:	    PIC16F84.asm                                      *
+;    Date:         01/11/2020                                         *
+;    File Version:    4                                               *
+;                                                                     *
+;    Author:   ISMAIL ABOUD                                           *
+;    Company:                                                         *
+;                                                                     * 
+;                                                                     *
+;**********************************************************************
+;                                                                     *
+;    Files Required: P16F84.INC                                       *
+;                                                                     *
+;**********************************************************************
+;                                                                     *
+;    Notes:                                                           *
+;                                                                     *
+;**********************************************************************
+
+
+	list      p=16F84             ; list directive to define processor
+	#include <p16F84.inc>         ; processor specific variable definitions
+
+	__CONFIG   _CP_OFF & _WDT_ON & _PWRTE_ON & _RC_OSC
+
+; '__CONFIG' directive is used to embed configuration data within .asm file.
+; The lables following the directive are located in the respective .inc file.
+; See respective data sheet for additional information on configuration word.
+
+; Introducing variables 
+# w_temp EQU 0x0C
+# status_temp EQU 0x0D
+decompt 1 EQU 0x0E
+decompt 2 EQU 0x0F
+
+org 0x000
+goto main 
+
+    org 0x04
+ movwf w_temp
+ movf STATUS,w 
+ movwf status_temp 
+ 
+; note 
+    movf status_temp,w
+    movwf STATUS 
+    swapf w_temp,f
+    swapf w_temp,w
+    retfie ; return from interrupt 
+
+main
+    bsf STATUS,RP0 
+    CLRF TRISB
+    bsf TRISA,0
+    bsf TRISA,1 ; RA0 & RA1 in input 
+    bcf STATUS,RP0
+; type of choice 
+btfss PORTA,0
+    goto saut1 ; RA0=0
+    goto saut2 ; RA0=1
+saut1
+    btfss PORTA,1
+    goto SP1 ; RA1=0
+    goto SP2 ; RA0=1
+saut2
+    btfss PORTA,1
+    goto SP3 ; RA1=0
+    goto SP4 ; RA1=1
+SP1
+    movlw d'1'
+    movwf PORTB
+    call tempo 
+    movlw d'2'
+    movwf PORTB
+    call tempo 
+	movlw d'4'
+    movwf PORTB
+    call tempo 
+    movlw d'8'
+    movwf PORTB
+    call tempo 
+    movlw d'16'
+    movwf PORTB
+    call tempo 
+    movlw d'32'
+    movwf PORTB
+    call tempo 
+    movlw d'64'
+    movwf PORTB
+    call tempo 
+    movlw d'128'
+    movwf PORTB
+    call tempo 
+	goto SP1
+SP2
+	movlw d'128'
+    movwf PORTB
+    call tempo 
+	movlw d'64'
+    movwf PORTB
+    call tempo
+	movlw d'32'
+    movwf PORTB
+    call tempo
+	movlw d'16'
+    movwf PORTB
+    call tempo
+	movlw d'8'
+    movwf PORTB
+    call tempo
+	movlw d'4'
+    movwf PORTB
+    call tempo
+	movlw d'2'
+    movwf PORTB
+    call tempo
+	movlw d'1'
+    movwf PORTB
+    call tempo
+	goto SP2
+SP3
+	movlw 0x0F
+    movwf PORTB
+    repeat3
+	call tempo 
+	swapf PORTB,1
+	goto repeat3
+SP4
+	movlw 0x0FF
+	movwf PORTB
+repeat4
+	call tempo 
+	comf PORTB.1
+	goto repeat4
+
+tempo
+	movlw d'131'
+	movwf decompt1
+	movlw d'253'
+repeat1
+	movwf decompt2
+repeat2
+	decfsz decompt2,f       
+	goto repeat2
+	decfsz decompt1,f
+	goto repeat1
+	nop
+	return
+ 
+		END                     ; directive 'end of program'
+
